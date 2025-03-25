@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Bank Management System</title>
+    <!-- Add jQuery CDN -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #e74c3c;
+            font-size: 2.5em;
+            margin: 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logout-btn {
+            background: #2c3e50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: #34495e;
+        }
+
+        .blood-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .donor-form {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #2c3e50;
+            font-weight: bold;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        button {
+            background: #e74c3c;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #c0392b;
+        }
+
+        .blood-inventory {
+            margin-top: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #e74c3c;
+            color: white;
+        }
+
+        tr:hover {
+            background: #f5f5f5;
+        }
+
+        .emergency-contact {
+            background: #ff4757;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .status-critical {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .status-low {
+            color: #f39c12;
+            font-weight: bold;
+        }
+
+        .status-sufficient {
+            color: #27ae60;
+        }
+
+        /* New styles for notifications */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+
+        .notification.success {
+            background: #2ecc71;
+        }
+
+        .notification.error {
+            background: #e74c3c;
+        }
+
+        .notification.show {
+            opacity: 1;
+        }
+
+        /* Style for search input */
+        .search-container {
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        /* Style for filtered results */
+        .filtered {
+            background-color: #fff3cd;
+        }
+    </style>
+</head>
+<body>
+    <!-- Add notification div -->
+    <div id="notification" class="notification"></div>
+
+    <div class="container">
+        <div class="header">
+            <h1>🩸 Blood Bank Management System</h1>
+            <div class="user-info">
+                <span>Welcome, <strong id="userName">User</strong></span>
+                <button class="logout-btn" onclick="handleLogout()">Logout</button>
+            </div>
+        </div>
+
+        <div class="blood-stats">
+            <div class="stat-card">
+                <h3>Available Blood Units</h3>
+                <p style="font-size: 2em;">1,234</p>
+            </div>
+            <div class="stat-card">
+                <h3>Active Donors</h3>
+                <p style="font-size: 2em;">856</p>
+            </div>
+            <div class="stat-card">
+                <h3>Emergency Requests</h3>
+                <p style="font-size: 2em;">12</p>
+            </div>
+        </div>
+
+        <div class="donor-form">
+            <h2 style="color: #e74c3c;">Request Blood</h2>
+            <form action="/request-blood" method="post">
+                <div class="form-group">
+                    <label for="blood-type">Required Blood Type:</label>
+                    <select id="blood-type" name="blood-type" required>
+                        <option value="">Select Blood Type</option>
+                        <option value="A+">A+</option>
+                        <option value="A-">A-</option>
+                        <option value="B+">B+</option>
+                        <option value="B-">B-</option>
+                        <option value="AB+">AB+</option>
+                        <option value="AB-">AB-</option>
+                        <option value="O+">O+</option>
+                        <option value="O-">O-</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="units">Number of Units:</label>
+                    <input type="number" id="units" name="units" min="1" max="10" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="urgency">Urgency Level:</label>
+                    <select id="urgency" name="urgency" required>
+                        <option value="normal">Normal</option>
+                        <option value="urgent">Urgent</option>
+                        <option value="emergency">Emergency</option>
+                    </select>
+                </div>
+
+                <button type="submit">Submit Request</button>
+    </form>
+        </div>
+
+        <!-- Add search container before the blood inventory table -->
+        <div class="search-container">
+            <input type="text" id="searchInput" class="search-input" placeholder="Search blood type...">
+        </div>
+
+        <div class="blood-inventory">
+            <h2 style="color: #e74c3c;">Current Blood Inventory</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Blood Type</th>
+                        <th>Available Units</th>
+                        <th>Last Updated</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>A+</td>
+                        <td>250</td>
+                        <td>2024-03-20</td>
+                        <td class="status-sufficient">Sufficient</td>
+                    </tr>
+                    <tr>
+                        <td>A-</td>
+                        <td>180</td>
+                        <td>2024-03-20</td>
+                        <td class="status-sufficient">Sufficient</td>
+                    </tr>
+                    <tr>
+                        <td>B+</td>
+                        <td>200</td>
+                        <td>2024-03-20</td>
+                        <td class="status-sufficient">Sufficient</td>
+                    </tr>
+                    <tr>
+                        <td>B-</td>
+                        <td>150</td>
+                        <td>2024-03-20</td>
+                        <td class="status-low">Low</td>
+        </tr>
+        <tr>
+                        <td>O+</td>
+                        <td>300</td>
+                        <td>2024-03-20</td>
+                        <td class="status-sufficient">Sufficient</td>
+        </tr>
+        <tr>
+                        <td>O-</td>
+                        <td>100</td>
+                        <td>2024-03-20</td>
+                        <td class="status-critical">Critical</td>
+        </tr>
+                </tbody>
+    </table>
+        </div>
+
+        <div class="emergency-contact">
+            <h3>🚨 Emergency Contact</h3>
+            <p>24/7 Emergency Blood Bank Helpline: <strong>1-800-BLOOD-BANK</strong></p>
+            <p>For urgent blood requirements, please call immediately!</p>
+        </div>
+    </div>
+
+    <script>
+        // Create a BloodBank object to manage all functionality
+        const BloodBank = {
+            // Properties
+            requests: [],
+            inventory: {},
+            
+            // Initialize the application
+            init() {
+                this.checkAuth();
+                this.loadData();
+                this.setupEventListeners();
+                this.updateStats();
+                this.loadInventoryData(); // New method to load inventory via AJAX
+            },
+
+            // Authentication check
+            checkAuth() {
+                const userName = localStorage.getItem('userName');
+                if (!userName) {
+                    window.location.href = 'dashboard.html';
+                    return;
+                }
+                document.getElementById('userName').textContent = userName;
+            },
+
+            // Load data from localStorage
+            loadData() {
+                this.requests = JSON.parse(localStorage.getItem('bloodRequests') || '[]');
+                this.inventory = JSON.parse(localStorage.getItem('bloodInventory') || '{}');
+            },
+
+            // Setup all event listeners
+            setupEventListeners() {
+                // Blood Request Form Handler
+                const bloodRequestForm = document.querySelector('.donor-form form');
+                if (bloodRequestForm) {
+                    bloodRequestForm.addEventListener('submit', (event) => {
+                        event.preventDefault();
+                        this.handleBloodRequest();
+                    });
+                }
+
+                // Search Handler
+                const searchInput = document.getElementById('searchInput');
+                if (searchInput) {
+                    searchInput.addEventListener('input', (event) => {
+                        this.handleSearch(event.target.value);
+                    });
+                }
+
+                // Inventory Update Handler
+                const inventoryTable = document.querySelector('table');
+                if (inventoryTable) {
+                    inventoryTable.addEventListener('click', (event) => {
+                        this.handleInventoryUpdate(event);
+                    });
+                }
+
+                // Stats Hover Handler
+                const statsContainer = document.querySelector('.blood-stats');
+                if (statsContainer) {
+                    statsContainer.addEventListener('mouseover', (event) => {
+                        this.handleStatsHover(event);
+                    });
+                }
+
+                // Logout Handler
+                const logoutBtn = document.querySelector('.logout-btn');
+                if (logoutBtn) {
+                    logoutBtn.addEventListener('click', () => {
+                        this.handleLogout();
+                    });
+                }
+            },
+
+            // Load inventory data via AJAX
+            loadInventoryData() {
+                $.ajax({
+                    url: 'api/inventory.php',
+                    method: 'GET',
+                    success: (response) => {
+                        if (response.success) {
+                            this.inventory = response.data;
+                            this.updateInventoryTable();
+                        } else {
+                            this.showNotification('Failed to load inventory data', 'error');
+                        }
+                    },
+                    error: () => {
+                        this.showNotification('Error connecting to server', 'error');
+                    }
+                });
+            },
+
+            // Update inventory table with AJAX data
+            updateInventoryTable() {
+                const tbody = $('table tbody');
+                tbody.empty();
+
+                Object.entries(this.inventory).forEach(([bloodType, data]) => {
+                    const row = $('<tr>');
+                    row.append($('<td>').text(bloodType));
+                    row.append($('<td>').text(data.units));
+                    row.append($('<td>').text(new Date(data.lastUpdated).toLocaleDateString()));
+                    
+                    const statusCell = $('<td>');
+                    if (data.units < 150) {
+                        statusCell.text('Critical').addClass('status-critical');
+                    } else if (data.units < 200) {
+                        statusCell.text('Low').addClass('status-low');
+                    } else {
+                        statusCell.text('Sufficient').addClass('status-sufficient');
+                    }
+                    row.append(statusCell);
+                    
+                    tbody.append(row);
+                });
+            },
+
+            // Handle blood request submission with AJAX
+            handleBloodRequest() {
+                const formData = {
+                    bloodType: $('#blood-type').val(),
+                    units: parseInt($('#units').val()),
+                    urgency: $('#urgency').val()
+                };
+
+                $.ajax({
+                    url: 'api/request-blood.php',
+                    method: 'POST',
+                    data: formData,
+                    success: (response) => {
+                        if (response.success) {
+                            this.showNotification('Blood request submitted successfully!', 'success');
+                            $('.donor-form form')[0].reset();
+                            this.updateStats();
+                            this.loadInventoryData(); // Reload inventory after request
+                        } else {
+                            this.showNotification(response.message || 'Failed to submit request', 'error');
+                        }
+                    },
+                    error: () => {
+                        this.showNotification('Error connecting to server', 'error');
+                    }
+                });
+            },
+
+            // Handle inventory updates with AJAX
+            handleInventoryUpdate(event) {
+                if ($(event.target).is('td') && $(event.target).parent().is('tr')) {
+                    const row = $(event.target).parent();
+                    const bloodType = row.find('td:first').text();
+                    const currentUnits = parseInt(row.find('td:nth-child(2)').text());
+                    
+                    const newUnits = prompt(`Enter new units for ${bloodType}:`, currentUnits);
+                    if (newUnits !== null && !isNaN(newUnits)) {
+                        const units = parseInt(newUnits);
+                        
+                        $.ajax({
+                            url: 'api/update-inventory.php',
+                            method: 'POST',
+                            data: {
+                                bloodType: bloodType,
+                                units: units
+                            },
+                            success: (response) => {
+                                if (response.success) {
+                                    this.showNotification(`Updated ${bloodType} inventory to ${units} units`, 'success');
+                                    this.loadInventoryData(); // Reload inventory data
+                                    this.updateStats();
+                                } else {
+                                    this.showNotification(response.message || 'Failed to update inventory', 'error');
+                                }
+                            },
+                            error: () => {
+                                this.showNotification('Error connecting to server', 'error');
+                            }
+                        });
+                    }
+                }
+            },
+
+            // Handle search functionality with jQuery
+            handleSearch(searchTerm) {
+                const rows = $('table tbody tr');
+                searchTerm = searchTerm.toLowerCase();
+
+                rows.each(function() {
+                    const bloodType = $(this).find('td:first').text().toLowerCase();
+                    $(this).css('background-color', bloodType.includes(searchTerm) ? '#fff3cd' : '');
+                });
+            },
+
+            // Handle stats hover
+            handleStatsHover(event) {
+                if (event.target.classList.contains('stat-card')) {
+                    const tooltip = document.createElement('div');
+                    tooltip.className = 'tooltip';
+                    tooltip.textContent = `Last updated: ${new Date().toLocaleString()}`;
+                    event.target.appendChild(tooltip);
+
+                    event.target.addEventListener('mouseout', () => {
+                        tooltip.remove();
+                    });
+                }
+            },
+
+            // Handle logout
+            handleLogout() {
+                localStorage.removeItem('userEmail');
+                localStorage.removeItem('userName');
+                window.location.href = 'dashboard.html';
+            },
+
+            // Update statistics with AJAX
+            updateStats() {
+                $.ajax({
+                    url: 'api/stats.php',
+                    method: 'GET',
+                    success: (response) => {
+                        if (response.success) {
+                            $('.stat-card:nth-child(1) p').text(response.data.totalUnits);
+                            $('.stat-card:nth-child(2) p').text(response.data.activeDonors);
+                            $('.stat-card:nth-child(3) p').text(response.data.emergencyRequests);
+                        }
+                    }
+                });
+            },
+
+            // Show notifications with jQuery animation
+            showNotification(message, type = 'success') {
+                const notification = $('#notification');
+                notification
+                    .text(message)
+                    .removeClass()
+                    .addClass(`notification ${type} show`)
+                    .fadeIn()
+                    .delay(3000)
+                    .fadeOut();
+            }
+        };
+
+        // Initialize the application when the page loads
+        $(document).ready(() => {
+            BloodBank.init();
+        });
+    </script>
+</body>
+</html>

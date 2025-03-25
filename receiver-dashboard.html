@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receiver Dashboard - Blood Bank</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: #f5f6fa;
+            color: #2c3e50;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #e74c3c;
+            font-size: 24px;
+        }
+
+        .logout-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: #c0392b;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-box {
+            background: #fff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .stat-box:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-icon {
+            font-size: 32px;
+            margin-bottom: 15px;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: bold;
+            color: #e74c3c;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .card {
+            background: #fff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .card h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 20px;
+            border-bottom: 2px solid #e74c3c;
+            padding-bottom: 10px;
+        }
+
+        .request-form {
+            background: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: #e74c3c;
+            outline: none;
+        }
+
+        .submit-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+
+        .submit-btn:hover {
+            background: #c0392b;
+        }
+
+        #map {
+            height: 300px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 2px solid #ddd;
+            transition: border-color 0.3s;
+        }
+
+        #map:focus-within {
+            border-color: #e74c3c;
+        }
+
+        .location-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .location-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .location-input:focus {
+            border-color: #e74c3c;
+            outline: none;
+        }
+
+        .search-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .search-btn:hover {
+            background: #c0392b;
+        }
+
+        .coordinates-display {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .coordinate-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .coordinate-label {
+            font-weight: 500;
+        }
+
+        .request-history {
+            margin-top: 30px;
+        }
+
+        .history-list {
+            list-style: none;
+        }
+
+        .history-item {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: transform 0.3s;
+        }
+
+        .history-item:hover {
+            transform: translateY(-2px);
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .blood-type {
+            font-size: 18px;
+            font-weight: bold;
+            color: #e74c3c;
+        }
+
+        .urgency {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .urgency.emergency {
+            background: #ffebee;
+            color: #e74c3c;
+        }
+
+        .urgency.urgent {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .urgency.normal {
+            background: #e8f5e9;
+            color: #4caf50;
+        }
+
+        .history-details {
+            margin: 10px 0;
+            color: #666;
+        }
+
+        .history-status {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .status-pending {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .status-accepted {
+            background: #e8f5e9;
+            color: #4caf50;
+        }
+
+        .status-rejected {
+            background: #ffebee;
+            color: #e74c3c;
+        }
+
+        .status-completed {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .donor-info {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .donor-info h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .donor-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+
+            .donor-details {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🩸 Receiver Dashboard</h1>
+            <button class="logout-btn" onclick="handleLogout()">Logout</button>
+        </div>
+
+        <div class="stats-container">
+            <div class="stat-box">
+                <div class="stat-icon">📝</div>
+                <div class="stat-value" id="total-requests">0</div>
+                <div class="stat-label">Total Requests</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon">✅</div>
+                <div class="stat-value" id="approved-requests">0</div>
+                <div class="stat-label">Approved Requests</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon">🩸</div>
+                <div class="stat-value" id="blood-received">0</div>
+                <div class="stat-label">Blood Received (Units)</div>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="card">
+                <h2>Request Blood</h2>
+                <form id="request-form" class="request-form">
+                    <div class="form-group">
+                        <label for="blood-type">Required Blood Type:</label>
+                        <select id="blood-type" required>
+                            <option value="">Select Blood Type</option>
+                            <option value="A+">A+</option>
+                            <option value="A-">A-</option>
+                            <option value="B+">B+</option>
+                            <option value="B-">B-</option>
+                            <option value="AB+">AB+</option>
+                            <option value="AB-">AB-</option>
+                            <option value="O+">O+</option>
+                            <option value="O-">O-</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="units">Number of Units:</label>
+                        <input type="number" id="units" min="1" max="10" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="urgency">Urgency Level:</label>
+                        <select id="urgency" required>
+                            <option value="normal">Normal</option>
+                            <option value="urgent">Urgent</option>
+                            <option value="emergency">Emergency</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="location">Location:</label>
+                        <div class="location-info">
+                            <input type="text" id="location-search" class="location-input" placeholder="Search for a location...">
+                            <button class="search-btn" id="search-location">Search</button>
+                        </div>
+                        <div id="map"></div>
+                        <div class="coordinates-display">
+                            <div class="coordinate-item">
+                                <span class="coordinate-label">Latitude:</span>
+                                <span id="lat-display">0.0000</span>
+                            </div>
+                            <div class="coordinate-item">
+                                <span class="coordinate-label">Longitude:</span>
+                                <span id="lng-display">0.0000</span>
+                            </div>
+                        </div>
+                        <input type="hidden" id="latitude" name="latitude">
+                        <input type="hidden" id="longitude" name="longitude">
+                    </div>
+                    <button type="submit" class="submit-btn">Submit Request</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card request-history">
+            <h2>Request History</h2>
+            <ul class="history-list" id="request-history-list">
+                <!-- Request history will be populated here -->
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // Check authentication
+            const userEmail = localStorage.getItem('userEmail');
+            const userType = localStorage.getItem('userType');
+            
+            if (!userEmail || userType !== 'receiver') {
+                window.location.href = 'dashboard.html';
+                return;
+            }
+
+            $('#userName').text(userEmail.split('@')[0]);
+
+            // Initialize map
+            let map;
+            let marker;
+            let geocoder;
+
+            function initMap() {
+                // Default location (can be replaced with user's location)
+                const defaultLocation = { lat: 20.5937, lng: 78.9629 };
+
+                map = new google.maps.Map(document.getElementById('map'), {
+                    zoom: 5,
+                    center: defaultLocation,
+                    mapTypeControl: true,
+                    streetViewControl: true,
+                    fullscreenControl: true
+                });
+
+                marker = new google.maps.Marker({
+                    position: defaultLocation,
+                    map: map,
+                    draggable: true,
+                    animation: google.maps.Animation.DROP
+                });
+
+                geocoder = new google.maps.Geocoder();
+
+                // Update coordinates when marker is dragged
+                marker.addListener('dragend', function() {
+                    updateCoordinates(marker.getPosition());
+                });
+
+                // Set initial coordinates
+                updateCoordinates(defaultLocation);
+            }
+
+            function updateCoordinates(position) {
+                const lat = position.lat();
+                const lng = position.lng();
+                
+                $('#latitude').val(lat);
+                $('#longitude').val(lng);
+                $('#lat-display').text(lat.toFixed(4));
+                $('#lng-display').text(lng.toFixed(4));
+
+                // Get address from coordinates
+                geocoder.geocode({ location: position }, (results, status) => {
+                    if (status === "OK") {
+                        $('#location-search').val(results[0].formatted_address);
+                    }
+                });
+            }
+
+            // Handle location search
+            $('#search-location').click(function() {
+                const address = $('#location-search').val();
+                if (address) {
+                    geocoder.geocode({ address: address }, (results, status) => {
+                        if (status === "OK") {
+                            const location = results[0].geometry.location;
+                            map.setCenter(location);
+                            marker.setPosition(location);
+                            updateCoordinates(location);
+                        } else {
+                            alert("Location not found. Please try a different search term.");
+                        }
+                    });
+                }
+            });
+
+            // Handle enter key in search input
+            $('#location-search').keypress(function(e) {
+                if (e.which == 13) {
+                    $('#search-location').click();
+                }
+            });
+
+            // Get user's current location
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        const userLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                        map.setCenter(userLocation);
+                        marker.setPosition(userLocation);
+                        updateCoordinates(userLocation);
+                    },
+                    function(error) {
+                        console.log("Error getting location:", error);
+                    }
+                );
+            }
+
+            // Handle request form submission
+            $('#request-form').submit(function(e) {
+                e.preventDefault();
+                const requestData = {
+                    bloodType: $('#blood-type').val(),
+                    units: parseInt($('#units').val()),
+                    urgency: $('#urgency').val(),
+                    latitude: $('#latitude').val(),
+                    longitude: $('#longitude').val(),
+                    receiverEmail: userEmail
+                };
+
+                // Simulate API call
+                $.ajax({
+                    url: 'api/submit-request.php',
+                    method: 'POST',
+                    data: requestData,
+                    success: function(response) {
+                        if (response.success) {
+                            alert('Blood request submitted successfully!');
+                            $('#request-form')[0].reset();
+                            loadRequestHistory();
+                        } else {
+                            alert('Failed to submit request. Please try again.');
+                        }
+                    },
+                    error: function() {
+                        alert('Error connecting to server. Please try again.');
+                    }
+                });
+            });
+
+            // Load request history
+            function loadRequestHistory() {
+                // Simulate API call
+                $.ajax({
+                    url: 'api/request-history.php',
+                    method: 'GET',
+                    data: { receiverEmail: userEmail },
+                    success: function(response) {
+                        if (response.success) {
+                            const historyList = $('#request-history-list');
+                            historyList.empty();
+
+                            response.data.forEach(request => {
+                                const statusClass = `status-${request.status.toLowerCase()}`;
+                                const requestItem = `
+                                    <li class="history-item">
+                                        <div class="history-header">
+                                            <span class="blood-type">${request.bloodType}</span>
+                                            <span class="urgency ${statusClass}">${request.urgency}</span>
+                                        </div>
+                                        <div class="history-details">
+                                            <p>${request.units} units requested</p>
+                                            <p>Submitted: ${new Date(request.timestamp).toLocaleString()}</p>
+                                            <span class="history-status ${statusClass}">${request.status}</span>
+                                        </div>
+                                        
+                                        ${request.status === 'Accepted' ? `
+                                            <div class="donor-info">
+                                                <h4>Donor Information</h4>
+                                                <div class="donor-details">
+                                                    <p>Name: ${request.donorName}</p>
+                                                    <p>Blood Type: ${request.donorBloodType}</p>
+                                                    <p>Contact: ${request.donorContact}</p>
+                                                    <p>Email: ${request.donorEmail}</p>
+                                                </div>
+                                            </div>
+                                        ` : ''}
+                                    </li>
+                                `;
+                                historyList.append(requestItem);
+                            });
+                        }
+                    }
+                });
+            }
+
+            // Handle logout
+            $('.logout-btn').click(function() {
+                localStorage.removeItem('userEmail');
+                localStorage.removeItem('userType');
+                window.location.href = 'dashboard.html';
+            });
+
+            // Initial load
+            loadRequestHistory();
+
+            // Refresh request history every 5 minutes
+            setInterval(loadRequestHistory, 300000);
+
+            // Add this function to load statistics
+            function loadStatistics() {
+                $.ajax({
+                    url: 'api/receiver-stats.php',
+                    method: 'GET',
+                    data: { receiverEmail: userEmail },
+                    success: function(response) {
+                        if (response.success) {
+                            $('#total-requests').text(response.data.totalRequests);
+                            $('#approved-requests').text(response.data.approvedRequests);
+                            $('#blood-received').text(response.data.bloodReceived);
+                        }
+                    }
+                });
+            }
+
+            // Add this to the initial load section
+            loadStatistics();
+            // Add this to the refresh interval
+            setInterval(loadStatistics, 300000);
+        });
+    </script>
+</body>
+</html> 

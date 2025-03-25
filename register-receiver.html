@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register as Receiver - Blood Bank</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <style>
+        /* ... existing styles ... */
+
+        .registration-form {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #2c3e50;
+            font-weight: bold;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: #e74c3c;
+            outline: none;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .success-message {
+            color: #2ecc71;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #2c3e50;
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            color: #e74c3c;
+        }
+
+        .emergency-contact {
+            margin-top: 20px;
+            padding: 15px;
+            background: #fff3cd;
+            border-radius: 5px;
+        }
+
+        .emergency-contact h3 {
+            color: #856404;
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🩸 Register as Blood Receiver</h1>
+        </div>
+
+        <div class="registration-form">
+            <form id="receiver-registration-form">
+                <div class="form-group">
+                    <label for="name">Full Name:</label>
+                    <input type="text" id="name" required>
+                    <div class="error-message" id="name-error"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" required>
+                    <div class="error-message" id="email-error"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" required>
+                    <div class="error-message" id="password-error"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirm-password">Confirm Password:</label>
+                    <input type="password" id="confirm-password" required>
+                    <div class="error-message" id="confirm-password-error"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Phone Number:</label>
+                    <input type="tel" id="phone" required>
+                    <div class="error-message" id="phone-error"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="emergency-contact">Emergency Contact Name:</label>
+                    <input type="text" id="emergency-contact" required>
+                    <div class="error-message" id="emergency-contact-error"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="emergency-phone">Emergency Contact Phone:</label>
+                    <input type="tel" id="emergency-phone" required>
+                    <div class="error-message" id="emergency-phone-error"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="medical-history">Medical History:</label>
+                    <textarea id="medical-history" rows="3" required></textarea>
+                    <div class="error-message" id="medical-history-error"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="location">Location:</label>
+                    <div id="map"></div>
+                    <input type="hidden" id="latitude" name="latitude">
+                    <input type="hidden" id="longitude" name="longitude">
+                </div>
+
+                <div class="emergency-contact">
+                    <h3>⚠️ Important Information</h3>
+                    <p>Please ensure your emergency contact information is accurate and up-to-date. This information will be used in case of urgent blood requirements.</p>
+                </div>
+
+                <button type="submit">Register</button>
+            </form>
+
+            <div class="success-message" id="registration-success">
+                Registration successful! Redirecting to login...
+            </div>
+
+            <a href="dashboard.html" class="back-link">← Back to Login</a>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // Initialize map
+            let map;
+            let marker;
+
+            function initMap() {
+                // Default location (can be replaced with user's location)
+                const defaultLocation = { lat: 20.5937, lng: 78.9629 };
+
+                map = new google.maps.Map(document.getElementById('map'), {
+                    zoom: 5,
+                    center: defaultLocation
+                });
+
+                marker = new google.maps.Marker({
+                    position: defaultLocation,
+                    map: map,
+                    draggable: true
+                });
+
+                // Update coordinates when marker is dragged
+                marker.addListener('dragend', function() {
+                    const position = marker.getPosition();
+                    $('#latitude').val(position.lat());
+                    $('#longitude').val(position.lng());
+                });
+
+                // Set initial coordinates
+                $('#latitude').val(defaultLocation.lat);
+                $('#longitude').val(defaultLocation.lng);
+            }
+
+            // Load Google Maps API
+            const script = document.createElement('script');
+            script.src = 'https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap';
+            script.async = true;
+            document.head.appendChild(script);
+
+            // Form validation
+            function validateForm() {
+                let isValid = true;
+                const errors = {};
+
+                // Name validation
+                const name = $('#name').val();
+                if (name.length < 2) {
+                    errors.name = 'Name must be at least 2 characters long';
+                    isValid = false;
+                }
+
+                // Email validation
+                const email = $('#email').val();
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                    errors.email = 'Please enter a valid email address';
+                    isValid = false;
+                }
+
+                // Password validation
+                const password = $('#password').val();
+                if (password.length < 8) {
+                    errors.password = 'Password must be at least 8 characters long';
+                    isValid = false;
+                }
+
+                // Confirm password validation
+                const confirmPassword = $('#confirm-password').val();
+                if (password !== confirmPassword) {
+                    errors.confirmPassword = 'Passwords do not match';
+                    isValid = false;
+                }
+
+                // Phone validation
+                const phone = $('#phone').val();
+                const phoneRegex = /^\+?[\d\s-]{10,}$/;
+                if (!phoneRegex.test(phone)) {
+                    errors.phone = 'Please enter a valid phone number';
+                    isValid = false;
+                }
+
+                // Emergency contact validation
+                const emergencyContact = $('#emergency-contact').val();
+                if (emergencyContact.length < 2) {
+                    errors.emergencyContact = 'Emergency contact name must be at least 2 characters long';
+                    isValid = false;
+                }
+
+                // Emergency phone validation
+                const emergencyPhone = $('#emergency-phone').val();
+                if (!phoneRegex.test(emergencyPhone)) {
+                    errors.emergencyPhone = 'Please enter a valid emergency contact phone number';
+                    isValid = false;
+                }
+
+                // Medical history validation
+                const medicalHistory = $('#medical-history').val();
+                if (medicalHistory.length < 10) {
+                    errors.medicalHistory = 'Please provide relevant medical history';
+                    isValid = false;
+                }
+
+                // Display errors
+                Object.keys(errors).forEach(field => {
+                    $(`#${field}-error`).text(errors[field]).show();
+                });
+
+                return isValid;
+            }
+
+            // Handle form submission
+            $('#receiver-registration-form').submit(function(e) {
+                e.preventDefault();
+
+                if (!validateForm()) {
+                    return;
+                }
+
+                const formData = {
+                    name: $('#name').val(),
+                    email: $('#email').val(),
+                    password: $('#password').val(),
+                    phone: $('#phone').val(),
+                    emergencyContact: $('#emergency-contact').val(),
+                    emergencyPhone: $('#emergency-phone').val(),
+                    medicalHistory: $('#medical-history').val(),
+                    latitude: $('#latitude').val(),
+                    longitude: $('#longitude').val(),
+                    userType: 'receiver'
+                };
+
+                // Simulate API call
+                $.ajax({
+                    url: 'api/register.php',
+                    method: 'POST',
+                    data: formData,
+                    success: function(response) {
+                        if (response.success) {
+                            $('#registration-success').show();
+                            setTimeout(() => {
+                                window.location.href = 'dashboard.html';
+                            }, 2000);
+                        } else {
+                            alert('Registration failed. Please try again.');
+                        }
+                    },
+                    error: function() {
+                        alert('Error connecting to server. Please try again.');
+                    }
+                });
+            });
+
+            // Clear error messages on input
+            $('input, select, textarea').on('input', function() {
+                const field = $(this).attr('id');
+                $(`#${field}-error`).hide();
+            });
+        });
+    </script>
+</body>
+</html> 

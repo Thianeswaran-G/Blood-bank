@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register as Donor - Blood Bank</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <style>
+        /* ... existing styles ... */
+
+        .registration-form {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #2c3e50;
+            font-weight: bold;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: #e74c3c;
+            outline: none;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .success-message {
+            color: #2ecc71;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #2c3e50;
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            color: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🩸 Register as Blood Donor</h1>
+        </div>
+
+        <div class="registration-form">
+            <form id="donor-registration-form">
+                <div class="form-group">
+                    <label for="name">Full Name:</label>
+                    <input type="text" id="name" required>
+                    <div class="error-message" id="name-error"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" required>
+                    <div class="error-message" id="email-error"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" required>
+                    <div class="error-message" id="password-error"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirm-password">Confirm Password:</label>
+                    <input type="password" id="confirm-password" required>
+                    <div class="error-message" id="confirm-password-error"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="blood-type">Blood Type:</label>
+                    <select id="blood-type" required>
+                        <option value="">Select Blood Type</option>
+                        <option value="A+">A+</option>
+                        <option value="A-">A-</option>
+                        <option value="B+">B+</option>
+                        <option value="B-">B-</option>
+                        <option value="AB+">AB+</option>
+                        <option value="AB-">AB-</option>
+                        <option value="O+">O+</option>
+                        <option value="O-">O-</option>
+                    </select>
+                    <div class="error-message" id="blood-type-error"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Phone Number:</label>
+                    <input type="tel" id="phone" required>
+                    <div class="error-message" id="phone-error"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="last-donation">Last Donation Date (if any):</label>
+                    <input type="date" id="last-donation">
+                </div>
+
+                <div class="form-group">
+                    <label for="health-conditions">Any Health Conditions:</label>
+                    <textarea id="health-conditions" rows="3"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="location">Location:</label>
+                    <div id="map"></div>
+                    <input type="hidden" id="latitude" name="latitude">
+                    <input type="hidden" id="longitude" name="longitude">
+                </div>
+
+                <button type="submit">Register</button>
+            </form>
+
+            <div class="success-message" id="registration-success">
+                Registration successful! Redirecting to login...
+            </div>
+
+            <a href="dashboard.html" class="back-link">← Back to Login</a>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // Initialize map
+            let map;
+            let marker;
+
+            function initMap() {
+                // Default location (can be replaced with user's location)
+                const defaultLocation = { lat: 20.5937, lng: 78.9629 };
+
+                map = new google.maps.Map(document.getElementById('map'), {
+                    zoom: 5,
+                    center: defaultLocation
+                });
+
+                marker = new google.maps.Marker({
+                    position: defaultLocation,
+                    map: map,
+                    draggable: true
+                });
+
+                // Update coordinates when marker is dragged
+                marker.addListener('dragend', function() {
+                    const position = marker.getPosition();
+                    $('#latitude').val(position.lat());
+                    $('#longitude').val(position.lng());
+                });
+
+                // Set initial coordinates
+                $('#latitude').val(defaultLocation.lat);
+                $('#longitude').val(defaultLocation.lng);
+            }
+
+            // Load Google Maps API
+            const script = document.createElement('script');
+            script.src = 'https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap';
+            script.async = true;
+            document.head.appendChild(script);
+
+            // Form validation
+            function validateForm() {
+                let isValid = true;
+                const errors = {};
+
+                // Name validation
+                const name = $('#name').val();
+                if (name.length < 2) {
+                    errors.name = 'Name must be at least 2 characters long';
+                    isValid = false;
+                }
+
+                // Email validation
+                const email = $('#email').val();
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                    errors.email = 'Please enter a valid email address';
+                    isValid = false;
+                }
+
+                // Password validation
+                const password = $('#password').val();
+                if (password.length < 8) {
+                    errors.password = 'Password must be at least 8 characters long';
+                    isValid = false;
+                }
+
+                // Confirm password validation
+                const confirmPassword = $('#confirm-password').val();
+                if (password !== confirmPassword) {
+                    errors.confirmPassword = 'Passwords do not match';
+                    isValid = false;
+                }
+
+                // Blood type validation
+                const bloodType = $('#blood-type').val();
+                if (!bloodType) {
+                    errors.bloodType = 'Please select your blood type';
+                    isValid = false;
+                }
+
+                // Phone validation
+                const phone = $('#phone').val();
+                const phoneRegex = /^\+?[\d\s-]{10,}$/;
+                if (!phoneRegex.test(phone)) {
+                    errors.phone = 'Please enter a valid phone number';
+                    isValid = false;
+                }
+
+                // Display errors
+                Object.keys(errors).forEach(field => {
+                    $(`#${field}-error`).text(errors[field]).show();
+                });
+
+                return isValid;
+            }
+
+            // Handle form submission
+            $('#donor-registration-form').submit(function(e) {
+                e.preventDefault();
+
+                if (!validateForm()) {
+                    return;
+                }
+
+                const formData = {
+                    name: $('#name').val(),
+                    email: $('#email').val(),
+                    password: $('#password').val(),
+                    bloodType: $('#blood-type').val(),
+                    phone: $('#phone').val(),
+                    lastDonation: $('#last-donation').val(),
+                    healthConditions: $('#health-conditions').val(),
+                    latitude: $('#latitude').val(),
+                    longitude: $('#longitude').val(),
+                    userType: 'donor'
+                };
+
+                // Simulate API call
+                $.ajax({
+                    url: 'api/register.php',
+                    method: 'POST',
+                    data: formData,
+                    success: function(response) {
+                        if (response.success) {
+                            $('#registration-success').show();
+                            setTimeout(() => {
+                                window.location.href = 'dashboard.html';
+                            }, 2000);
+                        } else {
+                            alert('Registration failed. Please try again.');
+                        }
+                    },
+                    error: function() {
+                        alert('Error connecting to server. Please try again.');
+                    }
+                });
+            });
+
+            // Clear error messages on input
+            $('input, select').on('input', function() {
+                const field = $(this).attr('id');
+                $(`#${field}-error`).hide();
+            });
+        });
+    </script>
+</body>
+</html> 
